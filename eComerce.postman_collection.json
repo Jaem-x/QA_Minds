@@ -518,6 +518,98 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "get order Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"jsonData = pm.response.json();",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 900ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(900);",
+									"});",
+									"",
+									"pm.test(\"Validar que el Body no viene vacio\", function(){",
+									"    pm.response.to.be.not.null;",
+									"});",
+									"",
+									"pm.test(\"Validar que el Body es un Json\", function(){",
+									"    pm.response.to.be.json;",
+									"});",
+									"",
+									"pm.test(\"Validar que viene el campo conversation\", function(){",
+									"    pm.expect(pm.response.text()).to.include('error')",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic {{tokenUp}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Accept",
+								"value": "application/json, text/plain, */*",
+								"type": "text"
+							},
+							{
+								"key": "Origin",
+								"value": "https://www.segundamano.mx",
+								"type": "text"
+							},
+							{
+								"key": "Referer",
+								"value": "https://www.segundamano.mx/",
+								"type": "text"
+							},
+							{
+								"key": "Access-Control-Request-Method",
+								"value": "GET",
+								"type": "text"
+							},
+							{
+								"key": "Access-Control-Request-Headers",
+								"value": "authorization",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_ecomerce}}/delivery/v1/seller/order",
+							"host": [
+								"{{base_ecomerce}}"
+							],
+							"path": [
+								"delivery",
+								"v1",
+								"seller",
+								"order"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -593,12 +685,6 @@
 						"key": "origin",
 						"value": "https://www.segundamano.mx",
 						"type": "text"
-					},
-					{
-						"key": "Authorization",
-						"value": "",
-						"type": "text",
-						"disabled": true
 					}
 				],
 				"body": {
@@ -621,13 +707,6 @@
 						"v1.1",
 						"private",
 						"accounts"
-					],
-					"query": [
-						{
-							"key": "lang",
-							"value": "es",
-							"disabled": true
-						}
 					]
 				}
 			},
@@ -781,7 +860,7 @@
 					}
 				],
 				"url": {
-					"raw": "{{base_ecomerce}}/nga/api/v1/api/users/{{uuid}}/counter?lang=es",
+					"raw": "{{base_ecomerce}}/nga/api/v1/api/users/{{uuid}}/counter",
 					"host": [
 						"{{base_ecomerce}}"
 					],
@@ -793,12 +872,6 @@
 						"users",
 						"{{uuid}}",
 						"counter"
-					],
-					"query": [
-						{
-							"key": "lang",
-							"value": "es"
-						}
 					]
 				}
 			},
@@ -1043,6 +1116,140 @@
 							"value": "true",
 							"disabled": true
 						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create a announce",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// jalar las variables locales para acceder al token",
+							"let email = pm.environment.get('email_validado');",
+							"let pass = pm.environment.get('pass_validado');",
+							"",
+							"//Encodar y luego hacer una postcall",
+							"let encode_token_1 = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(email +':'+ pass));",
+							"console.log(\"Base64 es:\",encode_token_1);",
+							"pm.environment.set(\"Base64_email\", encode_token_1)",
+							"",
+							"//obtengo la variable para que mas adelante no tenga problemas",
+							"let url = pm.environment.get('base_ecomerce')",
+							"// url para crear un token para crear la estancia",
+							"pm.sendRequest({",
+							"    url: url+'/nga/api/v1.1/private/accounts?lang=es',",
+							"    method: 'POST',",
+							"    header: 'Authorization: Basic ' + encode_token_1",
+							"    },",
+							"        function(err,res){",
+							"            let json_response = res.json()",
+							"            let error = err;",
+							"            console.log(\"Error en el reques\", error)",
+							"            console.log(\"Respuesta del request: \", json_response)",
+							"            pm.environment.set('token_fresh', json_response.access_token)       ",
+							"});",
+							"/////////////////////////////////////////////////////////////////////////////////////////////",
+							"//Para Obtener el uuid y token_fresh",
+							"let uuid = pm.environment.get('uuid')",
+							"let token_fresh = pm.environment.get('token_fresh') ",
+							"",
+							"let encode_token_2 = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(uuid+':'+token_fresh));",
+							"pm.environment.set(\"tokenUp\", encode_token_2)",
+							"//console.log(\"New Token refresh\", encode_token_2)"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"jsonData = pm.response.json();",
+							"",
+							"var jsonresponse = pm.response.json()",
+							"console.log(\"ad_id_announce\", jsonresponse.addressID)",
+							"",
+							"pm.environment.set('ad_id', jsonresponse.data.ad.ad_id)",
+							"",
+							"",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 3500ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(3500);",
+							"});",
+							"",
+							"pm.test(\"Validar que el Body no viene vacio\", function(){",
+							"    pm.response.to.be.not.null;",
+							"});",
+							"",
+							"pm.test(\"Validar que el Body es un Json\", function(){",
+							"    pm.response.to.be.json;",
+							"});",
+							"/*",
+							"pm.test(\"Validar que viene el campo alerts\", function(){",
+							"    pm.expect(pm.response.text()).to.include('alerts')",
+							"});*/"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic {{tokenUp}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-source",
+						"value": "PHOENIX_DESKTOP",
+						"description": "cuando se tiene un error \"entrypoint\" se va necesitar esta fuente (se encuentra en cURL)",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json, text/plain, */*",
+						"type": "text"
+					},
+					{
+						"key": "Origin",
+						"value": "https://www.segundamano.mx",
+						"type": "text"
+					},
+					{
+						"key": "Referer",
+						"value": "https://www.segundamano.mx/",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"category\":\"8243\",\"subject\":\"Servicio Profesional para Pruebas de aPIS\",\n    \"body\":\"Este anuncio es para contratar los servicios de un QA para probar sus apis \",\n    \"price\":\"2000\",\"region\":\"29\",\"municipality\":\"1976\",\"area\":\"60612\",\"phone_hidden\":\"false\",\n    \"show_phone\":\"true\",\"contact_phone\":\"5576743185\"\n\n}"
+				},
+				"url": {
+					"raw": "{{base_ecomerce}}/v2/accounts/{{uuid}}/up",
+					"host": [
+						"{{base_ecomerce}}"
+					],
+					"path": [
+						"v2",
+						"accounts",
+						"{{uuid}}",
+						"up"
 					]
 				}
 			},
@@ -1533,6 +1740,145 @@
 			"response": []
 		},
 		{
+			"name": "get order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"jsonData = pm.response.json();",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 900ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(900);",
+							"});",
+							"",
+							"pm.test(\"Validar que el Body no viene vacio\", function(){",
+							"    pm.response.to.be.not.null;",
+							"});",
+							"",
+							"pm.test(\"Validar que el Body es un Json\", function(){",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Validar que viene el campo conversation\", function(){",
+							"    pm.expect(pm.response.text()).to.include('orders')",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic {{tokenUp}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json, text/plain, */*",
+						"type": "text"
+					},
+					{
+						"key": "Origin",
+						"value": "https://www.segundamano.mx",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_ecomerce}}/delivery/v1/seller/order",
+					"host": [
+						"{{base_ecomerce}}"
+					],
+					"path": [
+						"delivery",
+						"v1",
+						"seller",
+						"order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get buyer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"jsonData = pm.response.json();",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 900ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(900);",
+							"});",
+							"",
+							"pm.test(\"Validar que el Body no viene vacio\", function(){",
+							"    pm.response.to.be.not.null;",
+							"});",
+							"",
+							"pm.test(\"Validar que el Body es un Json\", function(){",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Validar que viene el campo conversation\", function(){",
+							"    pm.expect(pm.response.text()).to.include('orders')",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic {{tokenUp}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json, text/plain, */*",
+						"type": "text"
+					},
+					{
+						"key": "Origin",
+						"value": "https://www.segundamano.mx",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "{{base_ecomerce}}/delivery/v1/buyer/order",
+					"host": [
+						"{{base_ecomerce}}"
+					],
+					"path": [
+						"delivery",
+						"v1",
+						"buyer",
+						"order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Get/favoritos",
 			"event": [
 				{
@@ -1684,140 +2030,6 @@
 						"account",
 						"{{uuid}}",
 						"alert"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "create a announce",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"// jalar las variables locales para acceder al token",
-							"let email = pm.environment.get('email_validado');",
-							"let pass = pm.environment.get('pass_validado');",
-							"",
-							"//Encodar y luego hacer una postcall",
-							"let encode_token_1 = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(email +':'+ pass));",
-							"console.log(\"Base64 es:\",encode_token_1);",
-							"pm.environment.set(\"Base64_email\", encode_token_1)",
-							"",
-							"//obtengo la variable para que mas adelante no tenga problemas",
-							"let url = pm.environment.get('base_ecomerce')",
-							"// url para crear un token para crear la estancia",
-							"pm.sendRequest({",
-							"    url: url+'/nga/api/v1.1/private/accounts?lang=es',",
-							"    method: 'POST',",
-							"    header: 'Authorization: Basic ' + encode_token_1",
-							"    },",
-							"        function(err,res){",
-							"            let json_response = res.json()",
-							"            let error = err;",
-							"            console.log(\"Error en el reques\", error)",
-							"            console.log(\"Respuesta del request: \", json_response)",
-							"            pm.environment.set('token_fresh', json_response.access_token)       ",
-							"});",
-							"/////////////////////////////////////////////////////////////////////////////////////////////",
-							"//Para Obtener el uuid y token_fresh",
-							"let uuid = pm.environment.get('uuid')",
-							"let token_fresh = pm.environment.get('token_fresh') ",
-							"",
-							"let encode_token_2 = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(uuid+':'+token_fresh));",
-							"pm.environment.set(\"tokenUp\", encode_token_2)",
-							"//console.log(\"New Token refresh\", encode_token_2)"
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"jsonData = pm.response.json();",
-							"",
-							"var jsonresponse = pm.response.json()",
-							"console.log(\"ad_id_announce\", jsonresponse.addressID)",
-							"",
-							"pm.environment.set('ad_id', jsonresponse.data.ad.ad_id)",
-							"",
-							"",
-							"",
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response time is less than 3500ms\", function () {",
-							"    pm.expect(pm.response.responseTime).to.be.below(3500);",
-							"});",
-							"",
-							"pm.test(\"Validar que el Body no viene vacio\", function(){",
-							"    pm.response.to.be.not.null;",
-							"});",
-							"",
-							"pm.test(\"Validar que el Body es un Json\", function(){",
-							"    pm.response.to.be.json;",
-							"});",
-							"/*",
-							"pm.test(\"Validar que viene el campo alerts\", function(){",
-							"    pm.expect(pm.response.text()).to.include('alerts')",
-							"});*/"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Basic {{tokenUp}}",
-						"type": "text"
-					},
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					},
-					{
-						"key": "x-source",
-						"value": "PHOENIX_DESKTOP",
-						"description": "cuando se tiene un error \"entrypoint\" se va necesitar esta fuente (se encuentra en cURL)",
-						"type": "text"
-					},
-					{
-						"key": "Accept",
-						"value": "application/json, text/plain, */*",
-						"type": "text"
-					},
-					{
-						"key": "Origin",
-						"value": "https://www.segundamano.mx",
-						"type": "text"
-					},
-					{
-						"key": "Referer",
-						"value": "https://www.segundamano.mx/",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"category\":\"8243\",\"subject\":\"Servicio Profesional para Pruebas de aPIS\",\n    \"body\":\"Este anuncio es para contratar los servicios de un QA para probar sus apis \",\n    \"price\":\"2000\",\"region\":\"29\",\"municipality\":\"1976\",\"area\":\"60612\",\"phone_hidden\":\"false\",\n    \"show_phone\":\"true\",\"contact_phone\":\"5576743185\"\n\n}"
-				},
-				"url": {
-					"raw": "{{base_ecomerce}}/v2/accounts/{{uuid}}/up",
-					"host": [
-						"{{base_ecomerce}}"
-					],
-					"path": [
-						"v2",
-						"accounts",
-						"{{uuid}}",
-						"up"
 					]
 				}
 			},
