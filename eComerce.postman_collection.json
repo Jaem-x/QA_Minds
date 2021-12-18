@@ -419,7 +419,7 @@
 									"});",
 									"",
 									"pm.test(\"Response time is less than 900ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(900);",
+									"    pm.expect(pm.response.responseTime).to.be.below(1500);",
 									"});",
 									"//Valida todo el body si este es pequeño de lo contrario no sirve",
 									"/*pm.test(\"Validar todo el Body\", function(){",
@@ -444,26 +444,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"//www.mailinator.com",
-									"let randomNumber = Math.floor(Math.random()* Math.floor(7654321));",
-									"console.log(\"El numero rando:\", randomNumber)",
 									"",
-									"//var email = \"alfonsoqa\" + randomNumber.toString(36) + \"@mailinator.com\";",
-									"",
-									"var email = \"alfonsoqa\" + randomNumber + \"@mailinator.com\";",
-									"var password = randomNumber",
-									"console.log( \"El email creado es: \", email, password)",
-									"pm.environment.set(\"email\", email)",
-									"pm.environment.set(\"password\", password)",
-									"",
-									"",
-									"var emailFormado = email + ' y su contraseña es ' + password;",
-									"console.log(\"El email formado es: \", emailFormado)",
-									"",
-									"",
-									"let encodeKeys = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(emailFormado));",
-									"console.log(\"La Base64 es:\",encodeKeys);",
-									"pm.environment.set(\"Base64\", encodeKeys)",
 									""
 								],
 								"type": "text/javascript"
@@ -507,13 +488,6 @@
 								"v1.1",
 								"private",
 								"accounts"
-							],
-							"query": [
-								{
-									"key": "lang",
-									"value": "es",
-									"disabled": true
-								}
 							]
 						}
 					},
@@ -527,8 +501,8 @@
 							"script": {
 								"exec": [
 									"jsonData = pm.response.json();",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
 									"});",
 									"",
 									"pm.test(\"Response time is less than 900ms\", function () {",
@@ -728,13 +702,6 @@
 							"    pm.expect(pm.response.responseTime).to.be.below(1400);",
 							"});",
 							"",
-							"pm.test(\"El account es correcto\", function(){",
-							"    pm.expect(jsonData.account.account_id).to.eql('/private/accounts/11515678')",
-							"});",
-							"",
-							"pm.test(\"El email es de alfondoqa de mailinator\", function(){",
-							"    pm.expect(jsonData.account.email).to.eql('alfonsoqa2@mailinator.com')",
-							"});",
 							"",
 							"pm.test(\"El campo name no viene vacio\", function(){",
 							"    pm.expect(jsonData.account.name).to.be.not.null",
@@ -2120,8 +2087,8 @@
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
-							"pm.test(\"Response time is less than 600ms\", function () {",
-							"    pm.expect(pm.response.responseTime).to.be.below(600);",
+							"pm.test(\"Response time is less than 800ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(800);",
 							"});",
 							"",
 							"pm.test(\"Validar que el Body no viene vacio\", function(){",
