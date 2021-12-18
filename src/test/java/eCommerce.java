@@ -8,6 +8,7 @@ import com.jayway.jsonpath.JsonPath;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.concurrent.TimeUnit;
 
 import static io.restassured.RestAssured.*;
 import static org.junit.Assert.*;
@@ -17,7 +18,7 @@ public class eCommerce {
 
     static private String base_url = "https://webapi.segundamano.mx";
     static private String username = "alfonsoqa1@mailinator.com";
-    static private String password = "12345";
+    static private String password = "andromeda93";
     static private String access_token;
     static private String account_id;
     static private String encode1;
@@ -35,7 +36,7 @@ public class eCommerce {
         Response resp = given()
                 .log().all()
                 .queryParam("lang", "es")
-                .auth().preemptive().basic("alfonsoqa1@mailinator.com", "12345")
+                .auth().preemptive().basic("alfonsoqa2@mailinator.com", "123456")
                 .post();
 
         String body_response = resp.getBody().asString();
@@ -67,22 +68,21 @@ public class eCommerce {
 
         String body_response = response.getBody().asString();
         String headers_response = response.getHeaders().toString();
-        //String body_p = response.prettyPrint();
-        System.out.print("The Body response: " + body_response);
-        System.out.print("The Headers response: " + headers_response);
-        //System.out.println("Body response: " + body_p);
 
-        // esto para que es
+        System.out.print("The Headers response: " + headers_response);
+        System.out.print("The Body response: " + body_response);
+        String body_p = response.prettyPrint();
         assertEquals(200, response.getStatusCode());
         assertNotNull(body_response);
         assertTrue(body_response.contains("categories"));
+        assertTrue("El tiempo es menor a 200 ms",response.getTimeIn(TimeUnit.MILLISECONDS)<300);
 
     }
 
     @Test
     public void t02_obtener_token() {
         RestAssured.baseURI = String.format("%s/nga/api/v1.1/private/accounts", base_url);
-        String token_basic = "dmVudGFzNDcyODM3Njg3QG1haWxpbmF0b3IuY29tOjEyMzQ1";
+        String token_basic = "YWxmb25zb3FhMkBtYWlsaW5hdG9yLmNvbToxMjM0NTY=";
 
         Response resp = given()
                 .log().all()
@@ -102,14 +102,39 @@ public class eCommerce {
         assertTrue(body_response.contains("access_token"));
     }
 
+
     @Test
-    public void t03_obtener_token_con_Basic_Auth_email_pass() {
+    public void t03_get_count() {
+        RestAssured.baseURI = String.format("%s/nga/api/v1/api/users/%s/counter", base_url, uuid);
+        System.out.println("Token " + access_token);
+        Response response = given()
+                .log()
+                .all()
+                //.auth().preemptive().basic("tag:scmcoord.com,2013:api ", access_token)
+                .header("Authorization","tag:scmcoord.com,2013:api " +"YWxmb25zb3FhMkBtYWlsaW5hdG9yLmNvbToxMjM0NTY=")
+                .header("Content-Type","application/json, text/plain, */*")
+                .header("Origin","https://www.segundamano.mx")
+                .get();
+
+        String body_response = response.getBody().asString();
+        String headers_response = response.getHeaders().toString();
+        System.out.print("The Headers response: " + headers_response);
+        System.out.println("Body Response is " + body_response);
+        String body_p2 = response.prettyPrint();
+        assertEquals(200, response.getStatusCode());
+/*
+        assertNotNull(body_response);
+        assertTrue(body_response.contains("unread"));*/
+    }
+
+    @Test
+    public void t04_obtener_token_con_Basic_Auth_email_pass() {
         RestAssured.baseURI = String.format("%s/nga/api/v1.1/private/accounts", base_url);
 
         Response resp = given()
                 .log().all()
                 .queryParam("lang", "es")
-                .auth().preemptive().basic("alfonsoqa@mailinator.com", "12345")
+                .auth().preemptive().basic("alfonsoqa2@mailinator.com", "123456")
                 .post();
         String body_response = resp.getBody().asString();
         String headers_response = resp.getHeaders().toString();
@@ -131,7 +156,7 @@ public class eCommerce {
     }
 
     @Test
-    public void t04_editar_datos_usuario() {
+    public void t05_editar_datos_usuario() {
         RestAssured.baseURI = String.format("%s/nga/api/v1/%s", base_url, account_id);
 
         String body2 = "{\"account\":{\"name\":\"Alfonso Estrada\",\"phone\":\"5576743185\",\"professional\":false}}";
@@ -145,21 +170,19 @@ public class eCommerce {
 
         String body_response = resp.getBody().asString();
         String headers_response = resp.getHeaders().toString();
-        // Esta línea es para el json
         String body_pre = resp.prettyPrint();
-        //System.out.println("Body response: " + body_response);
         System.out.println("Below is the pretty response format");
         String body_p2 = resp.prettyPrint();
-
         System.out.println("Headers response: " + headers_response);
 
         assertEquals(200, resp.getStatusCode());
         assertNotNull(body_response);
         assertTrue(body_response.contains("account"));
+        assertTrue(body_response.contains("name"));
     }
 
     @Test
-    public void t05_get_all_municipios() {
+    public void t06_get_all_municipios() {
         RestAssured.baseURI = String.format("%s/nga/api/v1.1/public/regions?depth=1&from=region:29&lang=es", base_url);
 
         //Crear Objeto
@@ -167,18 +190,19 @@ public class eCommerce {
                 .log()
                 .all()
                 .queryParam("lang", "es")
+                .queryParam("depth","1")
+                .queryParam("from","region:29")
                 .get();
 
-        // Solo imprimo el status Code
-        System.out.println("Status Code 200 is OK " + response.getStatusCode());
+        // Solo imprime el status Code
+       // System.out.println("Status Code 200 is OK " + response.getStatusCode());
 
-        // Para validar muchas cosas mejor crear una variable
         String body_response = response.getBody().asString();
         String headers_response = response.getHeaders().toString();
-        //String body_p = response.prettyPrint();
-        System.out.println("Body Response is " + body_response);
         System.out.print("The Headers response: " + headers_response);
-        //System.out.println("Body Response Pretty " + body_p);
+        System.out.println();
+        System.out.println("Body Response is " + body_response);
+        String body_p2 = response.prettyPrint();
 
         assertEquals(200, response.getStatusCode());
         assertNotNull(body_response);
@@ -186,7 +210,7 @@ public class eCommerce {
     }
 
     @Test
-    public void t06_get_cartera() {
+    public void t07_get_cartera() {
         RestAssured.baseURI = String.format("%s/tokens/v1/public/balance/detail/%s", base_url, uuid);
         Response response = given()
                 .log()
@@ -195,24 +219,23 @@ public class eCommerce {
                 .header("Accept","application/json, text/plain, */*")
                 .get();
 
-        System.out.println("Status Code 200 is OK " + response.getStatusCode());
-
+        //System.out.println("Status Code 200 is OK " + response.getStatusCode());
         String body_response = response.getBody().asString();
         String headers_response = response.getHeaders().toString();
-        System.out.println("Body Response is " + body_response);
         System.out.print("The Headers response: " + headers_response);
+        System.out.println("Body Response is " + body_response);
+        String body_p2 = response.prettyPrint();
 
         assertEquals(200, response.getStatusCode());
         assertNotNull(body_response);
         assertTrue(body_response.contains("balance"));
     }
 
-
     @Test
-    public void t07_get_messages() {
+    public void t08_get_messages() {
         RestAssured.baseURI = String.format("%s/nga/api/v1/api/hal/%s/conversations/", base_url, uuid);
 
-        Response resp = given()
+        Response response = given()
                 .log()
                 .all()
                 .queryParam("lang", "es")
@@ -221,37 +244,15 @@ public class eCommerce {
                 .header("Accept", "application/json, text/plain, */*")
                 .get();
 
-        String body_response = resp.getBody().asString();
-        String headers_response = resp.getHeaders().toString();
-        String body_p = resp.prettyPrint();
-        System.out.println("Below is the pretty response format");
-        String body_p2 = resp.prettyPrint();
-        System.out.println("Headers response: " + headers_response);
+        String body_response = response.getBody().asString();
+        String headers_response = response.getHeaders().toString();
+        System.out.print("The Headers response: " + headers_response);
+        System.out.println("Body Response is " + body_response);
+        String body_p2 = response.prettyPrint();
 
-        assertEquals(200, resp.getStatusCode());
+        assertEquals(200, response.getStatusCode());
         assertNotNull(body_response);
         assertTrue(body_response.contains("conversation"));
-    }
-
-    @Test
-    public void t08_get_count() {
-        RestAssured.baseURI = String.format("%s/nga/api/v1/api/users/%s/counter", base_url, uuid);
-
-        Response resp = given()
-                .log()
-                .all()
-                .queryParam("lang", "es")
-                .header("Authorization ", "tag:scmcoord.com,2013:api " + access_token)
-                .header("Origin", "https://www.segundamano.mx")
-                .get();
-
-        /*String body_response = resp.getBody().asString();
-        String headers_response = resp.getHeaders().toString();
-        System.out.print("The Body response: " + body_response);*/
-
-        //assertEquals(200,resp.getStatusCode());
-        // assertNotNull(body_response);
-        // assertTrue(body_response.contains("unread"));
     }
 
     @Test
@@ -295,7 +296,7 @@ public class eCommerce {
         String body = "{\n" +
                 "    \"images\":\"6972822811.jpg\",\n" +
                 "    \"category\":\"2122\",\n" +
-                "    \"subject\":\"Postman_Prueba 07\",\n" +
+                "    \"subject\":\"Postman_Prueba del sabado 18\",\n" +
                 "    \"body\":\"Prueba de subir la información de un anuncio desde Postman para verlo en segundamano\",\n" +
                 "    \"price\":\"10\",\n" +
                 "    \"region\":\"29\",\n" +
@@ -317,7 +318,7 @@ public class eCommerce {
 
         String body_response = response.getBody().asString();
         System.out.print("Body response: " + body_response);
-        //String body_p2 = response.prettyPrint();
+        String body_p2 = response.prettyPrint();
 
         assertEquals(200, response.getStatusCode());
         assertNotNull(body_response);
@@ -345,11 +346,11 @@ public class eCommerce {
 
         String body_response = response.getBody().asString();
         System.out.println("El body Responde: " + body_response);
+        String body_p2 = response.prettyPrint();
+
         assertEquals(201, response.getStatusCode());
         assertNotNull(body_response);
         assertTrue(body_response.contains("addressID"));
-        assertNotNull(body_response);
-
 
         address_id = JsonPath.read(body_response, "$.addressID");
         System.out.print("The address id is: " + address_id);
@@ -383,6 +384,11 @@ public class eCommerce {
         System.out.println("El body Responde: " + body_response);
         String body_p5 = response.prettyPrint();
 
+        assertEquals(200, response.getStatusCode());
+        assertNotNull(body_response);
+        assertTrue(body_response.contains("ad_listing_service_filters"));
+
+
 
         id_alert = JsonPath.read(body_response, "$.data.alert.id");
         System.out.print("Este es el id de la Alerta: " + id_alert);
@@ -404,7 +410,7 @@ public class eCommerce {
         assertEquals(200, response.getStatusCode());
         assertNotNull(body_response);
         assertTrue(body_response.contains("addresses"));
-        assertTrue(body_response.contains(address_id));
+        //assertTrue(body_response.contains("address_id"));
     }
 
     @Test
@@ -431,8 +437,6 @@ public class eCommerce {
 
         assertEquals(200, response.getStatusCode());
         assertNotNull(body_response);
-        assertTrue(body_response.contains(address_id));
-
         assertTrue(body_response.contains("{\"message\":\""+ address_id + " modified correctly\"}"));
     }
 
@@ -470,10 +474,58 @@ public class eCommerce {
         String body_response = response.getBody().asString();
         System.out.println("El body Responde: " + body_response);
         String body_p2 = response.prettyPrint();
+
+        assertEquals(200, response.getStatusCode());
+        assertNotNull(body_response);
+        assertTrue(body_response.contains("data"));
+
     }
 
     @Test
-    public void t16_delete_address() {
+    public void t16_get_order() {
+        RestAssured.baseURI = String.format("%s/delivery/v1/seller/order", base_url);
+
+        Response response = given().log().all()
+                .auth().preemptive().basic(uuid, access_token)
+                .header("accept", "application/json, text/plain, */*")
+                .get();
+
+        String body_response = response.getBody().asString();
+        String headers_response = response.getHeaders().toString();
+        System.out.print("The Headers response: " + headers_response);
+        System.out.println();
+        System.out.print("The Body response: " + body_response);
+        System.out.println();
+
+        assertEquals(200, response.getStatusCode());
+        assertNotNull(body_response);
+        assertTrue(body_response.contains("orders"));
+    }
+
+    @Test
+    public void t17_get_buyer() {
+        RestAssured.baseURI = String.format("%s/delivery/v1/buyer/order", base_url);
+        Response response = given().log().all()
+                .auth().preemptive().basic(uuid, access_token)
+                .header("accept", "application/json, text/plain, */*")
+                .get();
+
+        String body_response = response.getBody().asString();
+        String headers_response = response.getHeaders().toString();
+        System.out.print("The Headers response: " + headers_response);
+        System.out.println();
+        System.out.print("The Body response: " + body_response);
+
+        assertEquals(200, response.getStatusCode());
+        assertNotNull(body_response);
+        assertTrue(body_response.contains("orders"));
+
+    }
+
+
+
+    @Test
+    public void t18_delete_address() {
         RestAssured.baseURI = String.format("%s/addresses/v1/delete/%s", base_url, address_id);
 
         Response response = given().log().all()
@@ -487,12 +539,12 @@ public class eCommerce {
         assertEquals(200, response.getStatusCode());
         assertNotNull(body_response);
         assertTrue(body_response.contains(address_id));
-
+        System.out.println();
         assertTrue(body_response.contains("{\"message\":\""+ address_id + " deleted correctly\"}"));
     }
 
     @Test
-    public void t17_delete_alert() {
+    public void t19_delete_alert() {
         RestAssured.baseURI = String.format("%s/alerts/v1/private/account/%s/alert/%s", base_url, uuid, id_alert);
 
         Response response = given().log().all()
@@ -500,29 +552,23 @@ public class eCommerce {
                 .header("accept","application/json, text/plain, */*")
                 .delete();
 
+        System.out.println("El Id de la alerta es: " + id_alert);
         String body_response = response.getBody().asString();
         System.out.println("El body Responde: " + body_response);
         String body_p3 = response.prettyPrint();
 
         assertEquals(200, response.getStatusCode());
         assertNotNull(body_response);
-        System.out.println("El Id de la alerta es:" + id_alert);
-
-        assertTrue(body_response.contains("{\n" +
-                "    \"data\": {\n" +
-                "        \"status\": \"ok\"\n" +
-                "    }\n" +
-                "}"));
+        assertTrue(body_response.contains("data"));
     }
 
-
     @Test
-    public void t18_update_password() {
+    public void t20_update_password() {
         RestAssured.baseURI = String.format("%s/nga/api/v1/%s", base_url, account_id);
 
         String body = "{\n" +
                 "    \"account\":{\n" +
-                "        \"password\":\"andromeda93\"\n" +
+                "        \"password\":\"123456\"\n" +
                 "    }\n" +
                 "}";
 
@@ -538,13 +584,41 @@ public class eCommerce {
         String headers_response = resp.getHeaders().toString();
         String body_pre = resp.prettyPrint();
         System.out.println("Below is the pretty response format");
+
+
         String body_p2 = resp.prettyPrint();
-/*
         System.out.println("Headers response: " + headers_response);
 
         assertEquals(200, resp.getStatusCode());
         assertNotNull(body_response);
-        assertTrue(body_response.contains("account"));*/
+        assertTrue(body_response.contains("account"));
+  }
+
+    @Test
+    public void t21_400_bad_request() {
+        RestAssured.baseURI = String.format("%s/nga/api/v1.1/private/accounts", base_url);
+            String body = "{\n" +
+                    "    \"account\":{\n" +
+                    "        \"email\":\"alfonsoqa@mailinator.com\"\n" +
+                    "        }\n" +
+                    "}";
+
+        Response resp = given()
+                .log().all()
+                .header("Authorization","Basic "+encode1)
+                .header("origin","https://www.segundamano.mx")
+                .body(body)
+                .post();
+
+        String body_response = resp.getBody().asString();
+        String headers_response = resp.getHeaders().toString();
+        System.out.println("Body Response is " + body_response);
+
+        assertEquals(400, resp.getStatusCode());
+        assertNotNull(body_response);
+
+        assertTrue(body_response.contains("error"));
+
     }
 
 
