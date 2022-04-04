@@ -1,2 +1,2 @@
 # QA_Minds
-Curso api con postman y rest assured
+Postman y rest assured, probando las apis de una ecommerce
